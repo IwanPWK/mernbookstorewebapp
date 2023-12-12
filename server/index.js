@@ -48,11 +48,13 @@ async function run() {
 
     //get all books from database
 
-    app.get("/all-books", async (req, res) => {
-      const books = bookCollections.find();
-      const result = await books.toArray();
-      res.send(result);
-    });
+    // app.get("/all-books", async(req,res)=>{
+    //   const books =  bookCollections.find();
+    //   const result = await books.toArray();
+    //   res.send(result);
+    // })
+
+    //update a book data : patch or update method
 
     app.patch("/book/:id", async (req, res) => {
       const id = req.params.id;
@@ -60,7 +62,7 @@ async function run() {
       const updateBookData = req.body;
 
       const filter = { _id: new ObjectId(id) };
-      const options = { upsert: true };
+      const options = { upsert: true }; //Creates a new document if no documents match the filter.
       const updateDoc = {
         $set: {
           ...updateBookData,
@@ -71,6 +73,27 @@ async function run() {
         updateDoc,
         options
       );
+      res.send(result);
+    });
+
+    //delete a book from data
+
+    app.delete("/book/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const result = await bookCollections.deleteOne(filter);
+      res.send(result);
+    });
+
+    //get all books from database
+    //find by category
+
+    app.get("/all-books", async (req, res) => {
+      let query = {};
+      if (req.query?.category) {
+        query = { category: req.query.category };
+      }
+      const result = await bookCollections.find(query).toArray();
       res.send(result);
     });
 
