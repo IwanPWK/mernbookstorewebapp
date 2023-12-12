@@ -13,12 +13,11 @@ app.get("/", (req, res) => {
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
-  console.log(`Example app listening on port port`);
 });
 
 // mongoDb configuration
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri =
   "mongodb+srv://adminTokoBuku:5moZE8pphlxOncyB@bookstore.a8dcane.mongodb.net/?retryWrites=true&w=majority";
 
@@ -35,6 +34,46 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+
+    //create a collection of documents
+    const bookCollections = client.db("BookInventory").collection("books");
+
+    //insert a book to the database: post method
+
+    app.post("/upload-book", async (req, res) => {
+      const data = req.body;
+      const result = await bookCollections.insertOne(data);
+      res.send(result);
+    });
+
+    //get all books from database
+
+    app.get("/all-books", async (req, res) => {
+      const books = bookCollections.find();
+      const result = await books.toArray();
+      res.send(result);
+    });
+
+    app.patch("/book/:id", async (req, res) => {
+      const id = req.params.id;
+
+      const updateBookData = req.body;
+
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          ...updateBookData,
+        },
+      };
+      const result = await bookCollections.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
